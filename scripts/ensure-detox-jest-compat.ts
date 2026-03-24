@@ -9,12 +9,17 @@ function resolveDetoxDir(): string | null {
   }
 }
 
-function ensureFile(filePath: string, content: string): boolean {
-  if (fs.existsSync(filePath)) {
+function removeLegacyShim(filePath: string, expectedContent: string): boolean {
+  if (!fs.existsSync(filePath)) {
     return false;
   }
 
-  fs.writeFileSync(filePath, content, 'utf8');
+  const content = fs.readFileSync(filePath, 'utf8').trim();
+  if (content !== expectedContent) {
+    return false;
+  }
+
+  fs.rmSync(filePath);
   return true;
 }
 
@@ -22,50 +27,38 @@ function main(): void {
   const detoxDir = resolveDetoxDir();
 
   if (!detoxDir) {
-    console.warn('[detox-compat] Detox is not installed; skipping Jest runner compatibility shims.');
+    console.warn('[detox-compat] Detox is not installed; skipping legacy shim cleanup.');
     return;
   }
 
   const jestRunnerDir = path.join(detoxDir, 'runners', 'jest');
 
   if (!fs.existsSync(jestRunnerDir)) {
-    console.warn('[detox-compat] Detox Jest runner directory is missing; skipping compatibility shims.');
+    console.warn('[detox-compat] Detox Jest runner directory is missing; skipping legacy shim cleanup.');
     return;
   }
 
-  const shims = [
+  const removedShims = [
     {
       fileName: 'reporter.js',
-      target: './streamlineReporter',
+      expectedContent: "module.exports = require('./streamlineReporter');",
     },
     {
       fileName: 'testEnvironment.js',
-      target: './JestCircusEnvironment',
+      expectedContent: "module.exports = require('./JestCircusEnvironment');",
     },
-  ];
+  ].filter(({ fileName, expectedContent }) =>
+    removeLegacyShim(path.join(jestRunnerDir, fileName), expectedContent),
+  );
 
-  let createdCount = 0;
-
-  for (const shim of shims) {
-    const targetPath = path.join(jestRunnerDir, shim.fileName);
-    const sourcePath = path.join(jestRunnerDir, `${shim.target.slice(2)}.js`);
-
-    if (!fs.existsSync(sourcePath)) {
-      console.warn(`[detox-compat] Missing source module for ${shim.fileName}: ${sourcePath}`);
-      continue;
-    }
-
-    const created = ensureFile(targetPath, `module.exports = require('${shim.target}');\n`);
-
-    if (created) {
-      createdCount += 1;
-      console.log(`[detox-compat] Created ${path.relative(process.cwd(), targetPath)}`);
-    }
+  if (removedShims.length > 0) {
+    console.log(
+      `[detox-compat] Removed stale Detox Jest shims: ${removedShims.map(({ fileName }) => fileName).join(', ')}`,
+    );
+    return;
   }
 
-  if (createdCount === 0) {
-    console.log('[detox-compat] Jest runner compatibility shims already present.');
-  }
+  console.log('[detox-compat] No stale Detox Jest shims found.');
 }
 
 main();
