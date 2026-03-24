@@ -2,10 +2,15 @@
 
 This repository is a reusable Expo + TypeScript boilerplate for the single-system mobile pipeline.
 
+Start here:
+
+- Onboarding guide: ONBOARDING.md
+- Reusable onboarding skill: onboarding-skill/SKILL.md
+
 ## Stack
 
-- Expo SDK 54
-- React Native 0.81
+- Expo SDK 55
+- React Native 0.83
 - TypeScript (strict mode)
 - React Navigation (native stack)
 - Jest (`tests/unit`)
@@ -68,6 +73,21 @@ An example file is provided at `.env.example`.
 - Set a unique `scheme`, Android package name, and iOS bundle identifier for each app cloned from this template.
 - Copy `.env.example` into your environment-specific secret management or local `.env` workflow.
 
+## What Teams Can Touch
+
+- `src/**`
+- `tests/unit/**`
+- `tests/e2e/**` test cases
+- `app.config.ts`
+- environment value wiring via `src/config/appConfig.ts`
+
+## What Teams Should Not Touch Without Platform Review
+
+- `.github/workflows/**`
+- `scripts/detox-build-android.ts`
+- `scripts/detox-build-ios.ts`
+- `tests/e2e/jest.config.ts`
+
 ## CI
 
 The template keeps a workflow caller at `.github/workflows/mobile-pipeline-caller.yml` that delegates to the central orchestrator.
@@ -94,8 +114,15 @@ CI build policy:
 - The central mobile workflow builds Expo apps locally with `expo prebuild`, Gradle, xcodebuild, and Detox.
 - `EXPO_TOKEN`, `EXPO_PROJECT_ID`, `EXPO_OWNER`, `eas.json`, and remote EAS credentials are not required for CI.
 - The Android Detox helper normalizes `android/gradle.properties` so Expo Kotlin version settings stay deterministic in CI.
-- `npm ci` runs a small Detox compatibility hook that backfills `detox/runners/jest/reporter` and `detox/runners/jest/testEnvironment` when the installed Detox version only exposes the older Jest entrypoints.
+- Detox test setup uses Detox Jest runner defaults (`reporter`, `globalSetup`, `globalTeardown`, `testEnvironment`) with TypeScript E2E setup files.
 - The app must remain TypeScript-only with strict mode enabled.
+
+## Dependency Update Policy
+
+- Keep Expo compatibility first.
+- Run `npx expo install --check` before and after upgrades.
+- Use `npm update` for compatible updates.
+- Validate with `npm run verify` plus Detox build/test commands.
 
 
 this is for testing again

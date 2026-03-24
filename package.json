@@ -17,10 +17,10 @@
     "typecheck": "tsc --noEmit",
     "verify": "npm run lint && npm run typecheck && npm test && npm run doctor",
     "android:prebuild": "expo prebuild --platform android --non-interactive",
-    "detox:build": "detox build --configuration android.emu.debug",
-    "detox:test": "detox test --configuration android.emu.debug --headless",
-    "detox:build:ios": "detox build --configuration ios.sim.debug",
-    "detox:test:ios": "detox test --configuration ios.sim.debug --cleanup",
+    "detox:build": "detox build -c android.emu.debug",
+    "detox:test": "detox test -c android.emu.debug --headless",
+    "detox:build:ios": "detox build -c ios.sim.debug",
+    "detox:test:ios": "detox test -c ios.sim.debug --cleanup",
     "test:e2e": "npm run detox:test"
   },
   "detox": {
