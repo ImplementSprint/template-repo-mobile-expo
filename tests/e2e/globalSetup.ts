@@ -1,6 +1,6 @@
 import { copyFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import detoxGlobalSetup from 'detox/runners/jest/globalSetup';
+import detoxGlobalSetup from 'detox/runners/jest/globalSetup.js';
 
 function collectApkCandidates() {
   const rootPath = join(process.cwd(), 'android', 'app', 'build', 'outputs', 'apk');
