@@ -10,7 +10,11 @@ const gradleWrapperPath = join(androidDir, gradleWrapper);
 const debugApkDir = join(androidDir, 'app', 'build', 'outputs', 'apk', 'debug');
 const expectedDebugApkPath = join(debugApkDir, 'app-debug.apk');
 const kotlinVersion = '2.0.21';
-const gradleTaskArgs = ['assembleDebug', 'assembleAndroidTest', '-DtestBuildType=debug'];
+// Build only the app module artifacts Detox needs.
+// Running root-level assembleAndroidTest may trigger androidTest packaging
+// on Expo library modules (for example :expo, :expo-log-box), which can fail
+// without affecting Detox app binary requirements.
+const gradleTaskArgs = [':app:assembleDebug', ':app:assembleAndroidTest', '-DtestBuildType=debug'];
 
 function run(command: string, args: string[], cwd = process.cwd()): void {
   const result = spawnSync(command, args, {
@@ -59,7 +63,7 @@ function ensureExpectedDebugApk(): void {
 
   const debugApkCandidates = readdirSync(debugApkDir)
     .filter((fileName) => fileName.endsWith('.apk'))
-    .sort();
+    .sort((left, right) => left.localeCompare(right));
 
   const [firstCandidate] = debugApkCandidates;
 
