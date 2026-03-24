@@ -2,13 +2,14 @@ import { copyFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import detoxGlobalSetup from 'detox/runners/jest/globalSetup';
 
-function collectApkCandidates(rootPath: string): string[] {
+function collectApkCandidates() {
+  const rootPath = join(process.cwd(), 'android', 'app', 'build', 'outputs', 'apk');
   if (!existsSync(rootPath)) {
     return [];
   }
 
-  const stack: string[] = [rootPath];
-  const results: string[] = [];
+  const stack = [rootPath];
+  const results = [];
 
   while (stack.length > 0) {
     const current = stack.pop();
@@ -33,23 +34,20 @@ function collectApkCandidates(rootPath: string): string[] {
   return results.sort((left, right) => left.localeCompare(right));
 }
 
-function ensureExpectedDebugApk(): void {
+function ensureExpectedDebugApk() {
   const expectedPath = join(process.cwd(), 'android', 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk');
 
   if (existsSync(expectedPath)) {
     return;
   }
 
-  const apkRoot = join(process.cwd(), 'android', 'app', 'build', 'outputs', 'apk');
-  const candidates = collectApkCandidates(apkRoot);
-
+  const candidates = collectApkCandidates();
   if (candidates.length === 0) {
     return;
   }
 
   const preferred = candidates.find((candidate) => candidate.includes(join('debug', 'app-debug')));
   const source = preferred || candidates[0];
-
   if (!source) {
     return;
   }
@@ -59,7 +57,7 @@ function ensureExpectedDebugApk(): void {
   console.log(`[detox-apk] Normalized APK for Detox: ${source} -> ${expectedPath}`);
 }
 
-export default async function globalSetup(): Promise<void> {
+export default async function globalSetup() {
   ensureExpectedDebugApk();
   await detoxGlobalSetup();
 }
