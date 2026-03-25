@@ -28,7 +28,7 @@ const iosDir = join(rootDir, 'ios');
 const derivedDataPath = join(iosDir, 'build');
 const detoxAppPath = join(derivedDataPath, 'Build', 'Products', 'Debug-iphonesimulator', 'DetoxApp.app');
 const maxContainerDepth = 3;
-const excludedSchemePattern = /^(Pods($|-)|.*Tests?$|.*UITests?$|.*UnitTests?$|.*IntegrationTests?$|.*SnapshotTests?$|.*tvOS.*|.*macOS.*)$/iu;
+const excludedSchemeKeywords = ['test', 'uitest', 'unittest', 'integrationtest', 'snapshottest', 'tvos', 'macos'];
 
 function spawn(command: string, args: string[], options: RunOptions = {}): RunResult {
   const result = spawnSync(command, args, {
@@ -151,6 +151,16 @@ function scoreContainer(container: XcodeContainer): number {
   return score;
 }
 
+function isExcludedScheme(scheme: string): boolean {
+  const normalized = scheme.toLowerCase().replaceAll(/[^a-z]/g, '');
+
+  if (normalized.startsWith('pods')) {
+    return true;
+  }
+
+  return excludedSchemeKeywords.some((keyword) => normalized.includes(keyword));
+}
+
 function findBuildContainer(): XcodeContainer {
   const candidates = findXcodeContainerCandidates(iosDir, 0);
 
@@ -183,20 +193,20 @@ function resolveScheme(container: XcodeContainer): string {
   const containerName = basename(container.path, extname(container.path));
 
   const exactMatch = schemes.find(
-    (scheme) => !excludedSchemePattern.test(scheme) && scheme.toLowerCase() === containerName.toLowerCase(),
+    (scheme) => !isExcludedScheme(scheme) && scheme.toLowerCase() === containerName.toLowerCase(),
   );
   if (exactMatch) {
     return exactMatch;
   }
 
   const partialMatch = schemes.find(
-    (scheme) => !excludedSchemePattern.test(scheme) && scheme.toLowerCase().includes(containerName.toLowerCase()),
+    (scheme) => !isExcludedScheme(scheme) && scheme.toLowerCase().includes(containerName.toLowerCase()),
   );
   if (partialMatch) {
     return partialMatch;
   }
 
-  const fallbackMatch = schemes.find((scheme) => !excludedSchemePattern.test(scheme));
+  const fallbackMatch = schemes.find((scheme) => !isExcludedScheme(scheme));
   if (fallbackMatch) {
     return fallbackMatch;
   }
