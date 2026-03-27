@@ -19,11 +19,13 @@ const kotlinVersion = '2.0.21';
 // on Expo library modules (for example :expo, :expo-log-box), which can fail
 // without affecting Detox app binary requirements.
 const gradleTaskArgs = [':app:assembleDebug', ':app:assembleAndroidTest', '-DtestBuildType=debug'];
-const detoxRepositorySnippet = 'maven { url("$rootDir/../node_modules/detox/Detox-android") }';
+const detoxRepositorySnippet = "maven { url('$rootDir/../node_modules/detox/Detox-android') }";
+const detoxRepositoryPattern = /\s*maven\s*\{\s*url\((['"]?)\$rootDir\/\.\.\/node_modules\/detox\/Detox-android\1\)\s*\}\s*/g;
 const detoxDependencySnippet = "androidTestImplementation('com.wix:detox:+')";
 const androidTestCoreSnippet = "androidTestImplementation('androidx.test:core:1.7.0')";
 const androidTestRunnerSnippet = "androidTestImplementation('androidx.test:runner:1.7.0')";
 const androidTestRulesSnippet = "androidTestImplementation('androidx.test:rules:1.7.0')";
+const androidTestExtJunitSnippet = "androidTestImplementation('androidx.test.ext:junit:1.3.0')";
 const appCompatDependencySnippet = "implementation 'androidx.appcompat:appcompat:1.1.0'";
 
 function run(command: string, args: string[], cwd = process.cwd()): void {
@@ -87,18 +89,23 @@ function patchProjectBuildGradle(): void {
   }
 
   const content = readFileSync(projectBuildGradlePath, 'utf8');
-  if (content.includes(detoxRepositorySnippet)) {
-    return;
+  const contentWithoutDetoxRepo = content.replace(detoxRepositoryPattern, '\n');
+  let didPatchRepositories = false;
+  let patched = contentWithoutDetoxRepo.replace(/^(\s*repositories\s*\{)/gm, (match) => {
+    didPatchRepositories = true;
+    const indentMatch = match.match(/^\s*/u);
+    const indent = indentMatch?.[0] ?? '';
+    return `${match}\n${indent}    ${detoxRepositorySnippet}`;
+  });
+
+  if (!didPatchRepositories) {
+    patched = `${contentWithoutDetoxRepo}\n\nallprojects {\n    repositories {\n        ${detoxRepositorySnippet}\n    }\n}\n`;
   }
 
-  let patched = content.replace(/mavenCentral\(\)/, `mavenCentral()\n        ${detoxRepositorySnippet}`);
-
-  if (patched === content) {
-    patched = `${content}\n\nallprojects {\n    repositories {\n        ${detoxRepositorySnippet}\n    }\n}\n`;
+  if (patched !== content) {
+    writeFileSync(projectBuildGradlePath, patched, 'utf8');
+    console.log('Patched android/build.gradle: prioritized local Detox Android repository.');
   }
-
-  writeFileSync(projectBuildGradlePath, patched, 'utf8');
-  console.log('Patched android/build.gradle: added Detox Android repository.');
 }
 
 function patchAppBuildGradle(): void {
@@ -112,9 +119,14 @@ function patchAppBuildGradle(): void {
   if (!patched.includes("testBuildType System.getProperty('testBuildType', 'debug')")) {
     patched = patched.replace(
       /defaultConfig\s*\{/,
-      "defaultConfig {\n        testBuildType System.getProperty('testBuildType', 'debug')\n        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'",
+      "defaultConfig {\n        testBuildType System.getProperty('testBuildType', 'debug')\n        testInstrumentationRunner 'com.wix.detox.DetoxJUnitRunner'",
     );
   }
+
+  patched = patched.replace(
+    /testInstrumentationRunner\s+['"][^'"]+['"]/,
+    "testInstrumentationRunner 'com.wix.detox.DetoxJUnitRunner'",
+  );
 
   if (!patched.includes(detoxDependencySnippet)) {
     patched = patched.replace(/dependencies\s*\{/, `dependencies {\n    ${detoxDependencySnippet}`);
@@ -130,6 +142,10 @@ function patchAppBuildGradle(): void {
 
   if (!patched.includes(androidTestRulesSnippet)) {
     patched = patched.replace(/dependencies\s*\{/, `dependencies {\n    ${androidTestRulesSnippet}`);
+  }
+
+  if (!patched.includes(androidTestExtJunitSnippet)) {
+    patched = patched.replace(/dependencies\s*\{/, `dependencies {\n    ${androidTestExtJunitSnippet}`);
   }
 
   if (!patched.includes(appCompatDependencySnippet)) {
@@ -172,14 +188,9 @@ function ensureDetoxTestSource(): void {
     'DetoxTest.java',
   );
 
-  if (existsSync(detoxTestPath) && readFileSync(detoxTestPath, 'utf8').includes('Detox.runTests')) {
-    return;
-  }
-
   const detoxTestSource = `package ${packageName};
 
 import com.wix.detox.Detox;
-import com.wix.detox.config.DetoxConfig;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -197,15 +208,14 @@ public class DetoxTest {
 
     @Test
     public void runDetoxTests() {
-        DetoxConfig detoxConfig = new DetoxConfig();
-        detoxConfig.idlePolicyConfig.masterTimeoutSec = 90;
-        detoxConfig.idlePolicyConfig.idleResourceTimeoutSec = 60;
-        detoxConfig.rnContextLoadTimeoutSec = (BuildConfig.DEBUG ? 180 : 60);
-
-        Detox.runTests(mActivityRule, detoxConfig);
+        Detox.runTests(mActivityRule);
     }
 }
 `;
+
+  if (existsSync(detoxTestPath) && readFileSync(detoxTestPath, 'utf8') === detoxTestSource) {
+    return;
+  }
 
   mkdirSync(dirname(detoxTestPath), { recursive: true });
   writeFileSync(detoxTestPath, detoxTestSource, 'utf8');
