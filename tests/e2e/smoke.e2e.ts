@@ -1,11 +1,12 @@
-import { by, device, element, expect } from 'detox';
+import { by, device, element, expect, waitFor } from 'detox';
 
 describe('Boilerplate app smoke flow', () => {
   beforeAll(async () => {
     await device.launchApp({ newInstance: true });
+    await waitFor(element(by.id('home-screen'))).toBeVisible().withTimeout(20000);
   });
 
-  it('placeholder e2e test', async () => {
-    await expect(element(by.id('home-title'))).toBeVisible();
+  it('shows the home screen', async () => {
+    await expect(element(by.id('home-screen'))).toBeVisible();
   });
 });

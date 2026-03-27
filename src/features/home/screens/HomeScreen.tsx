@@ -8,7 +8,7 @@ export function HomeScreen() {
   const { appName, environment } = getAppConfig();
 
   return (
-    <View style={styles.root}>
+    <View testID="home-screen" style={styles.root}>
       <Text testID="home-title" style={styles.title}>{appName}</Text>
       <Text style={styles.subtitle}>Single-root Expo boilerplate (TypeScript-first)</Text>
       <View style={styles.badge}>
