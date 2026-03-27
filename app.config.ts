@@ -28,6 +28,9 @@ export default function getExpoConfig(): ExpoConfig {
     scheme: 'templatemobilesingle',
     userInterfaceStyle: 'automatic',
     jsEngine: 'hermes',
+    experiments: {
+      tsconfigPaths: true,
+    },
     android: {
       package: 'com.anonymous.templaterepombsingle',
     },
@@ -38,6 +41,7 @@ export default function getExpoConfig(): ExpoConfig {
       },
     },
     plugins: [
+      './plugins/withDetoxAndroidCleartextTraffic',
       [
         'expo-build-properties',
         {

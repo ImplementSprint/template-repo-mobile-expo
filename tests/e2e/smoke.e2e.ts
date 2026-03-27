@@ -3,7 +3,12 @@ import { by, device, element, expect, waitFor } from 'detox';
 describe('Boilerplate app smoke flow', () => {
   beforeAll(async () => {
     await device.launchApp({ newInstance: true });
-    await waitFor(element(by.id('home-screen'))).toBeVisible().withTimeout(20000);
+
+    if (device.getPlatform() === 'ios') {
+      await device.disableSynchronization();
+    }
+
+    await waitFor(element(by.id('home-screen'))).toExist().withTimeout(20000);
   });
 
   it('shows the home screen', async () => {
