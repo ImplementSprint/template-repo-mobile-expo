@@ -6,6 +6,6 @@ describe('Boilerplate app smoke flow', () => {
   });
 
   it('placeholder e2e test', async () => {
-    await expect(element(by.text('Expo TS Boilerplate'))).toBeVisible();
+    await expect(element(by.id('home-title'))).toBeVisible();
   });
 });
