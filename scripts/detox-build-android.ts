@@ -1,11 +1,13 @@
 import { spawnSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 const isWindows = process.platform === 'win32';
 const gradleWrapper = isWindows ? 'gradlew.bat' : './gradlew';
 const androidDir = join(process.cwd(), 'android');
 const gradlePropertiesPath = join(androidDir, 'gradle.properties');
+const projectBuildGradlePath = join(androidDir, 'build.gradle');
+const appBuildGradlePath = join(androidDir, 'app', 'build.gradle');
 const gradleWrapperPath = join(androidDir, gradleWrapper);
 const debugApkDir = join(androidDir, 'app', 'build', 'outputs', 'apk', 'debug');
 const expectedDebugApkPath = join(debugApkDir, 'app-debug.apk');
@@ -17,6 +19,9 @@ const kotlinVersion = '2.0.21';
 // on Expo library modules (for example :expo, :expo-log-box), which can fail
 // without affecting Detox app binary requirements.
 const gradleTaskArgs = [':app:assembleDebug', ':app:assembleAndroidTest', '-DtestBuildType=debug'];
+const detoxRepositorySnippet = 'maven { url("$rootDir/../node_modules/detox/Detox-android") }';
+const detoxDependencySnippet = "androidTestImplementation('com.wix:detox:+')";
+const appCompatDependencySnippet = "implementation 'androidx.appcompat:appcompat:1.1.0'";
 
 function run(command: string, args: string[], cwd = process.cwd()): void {
   const result = spawnSync(command, args, {
@@ -41,6 +46,155 @@ function ensureAndroidProject(): void {
   if (!hasAndroidDir || !hasGradleWrapper) {
     run('npx', ['expo', 'prebuild', '--platform', 'android', '--non-interactive']);
   }
+}
+
+function findFileByName(rootPath: string, fileNames: string[]): string | null {
+  if (!existsSync(rootPath)) {
+    return null;
+  }
+
+  const pending = [rootPath];
+
+  while (pending.length > 0) {
+    const currentPath = pending.pop();
+    if (!currentPath) {
+      break;
+    }
+
+    for (const entry of readdirSync(currentPath, { withFileTypes: true })) {
+      const entryPath = join(currentPath, entry.name);
+
+      if (entry.isDirectory()) {
+        pending.push(entryPath);
+        continue;
+      }
+
+      if (entry.isFile() && fileNames.includes(entry.name)) {
+        return entryPath;
+      }
+    }
+  }
+
+  return null;
+}
+
+function patchProjectBuildGradle(): void {
+  if (!existsSync(projectBuildGradlePath)) {
+    return;
+  }
+
+  const content = readFileSync(projectBuildGradlePath, 'utf8');
+  if (content.includes(detoxRepositorySnippet)) {
+    return;
+  }
+
+  let patched = content.replace(/mavenCentral\(\)/, `mavenCentral()\n        ${detoxRepositorySnippet}`);
+
+  if (patched === content) {
+    patched = `${content}\n\nallprojects {\n    repositories {\n        ${detoxRepositorySnippet}\n    }\n}\n`;
+  }
+
+  writeFileSync(projectBuildGradlePath, patched, 'utf8');
+  console.log('Patched android/build.gradle: added Detox Android repository.');
+}
+
+function patchAppBuildGradle(): void {
+  if (!existsSync(appBuildGradlePath)) {
+    return;
+  }
+
+  let content = readFileSync(appBuildGradlePath, 'utf8');
+  let patched = content;
+
+  if (!patched.includes("testBuildType System.getProperty('testBuildType', 'debug')")) {
+    patched = patched.replace(
+      /defaultConfig\s*\{/,
+      "defaultConfig {\n        testBuildType System.getProperty('testBuildType', 'debug')\n        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'",
+    );
+  }
+
+  if (!patched.includes(detoxDependencySnippet)) {
+    patched = patched.replace(/dependencies\s*\{/, `dependencies {\n    ${detoxDependencySnippet}`);
+  }
+
+  if (!patched.includes(appCompatDependencySnippet)) {
+    patched = patched.replace(/dependencies\s*\{/, `dependencies {\n    ${appCompatDependencySnippet}`);
+  }
+
+  if (patched !== content) {
+    writeFileSync(appBuildGradlePath, patched, 'utf8');
+    console.log('Patched android/app/build.gradle: added Detox Android test dependencies.');
+  }
+}
+
+function ensureDetoxTestSource(): void {
+  const mainActivityPath = findFileByName(join(androidDir, 'app', 'src', 'main'), ['MainActivity.java', 'MainActivity.kt']);
+
+  if (!mainActivityPath) {
+    console.error('Unable to locate MainActivity source for Detox Android test setup.');
+    process.exit(1);
+  }
+
+  const mainActivityContent = readFileSync(mainActivityPath, 'utf8');
+  const packageMatch = mainActivityContent.match(/package\s+([\w.]+)/);
+  const classMatch = mainActivityContent.match(/class\s+([A-Za-z0-9_]+)/);
+
+  const packageName = packageMatch?.[1];
+  const activityName = classMatch?.[1] || 'MainActivity';
+
+  if (!packageName) {
+    console.error(`Unable to resolve Android package name from ${mainActivityPath}`);
+    process.exit(1);
+  }
+
+  const detoxTestPath = join(
+    androidDir,
+    'app',
+    'src',
+    'androidTest',
+    'java',
+    ...packageName.split('.'),
+    'DetoxTest.java',
+  );
+
+  if (existsSync(detoxTestPath) && readFileSync(detoxTestPath, 'utf8').includes('Detox.runTests')) {
+    return;
+  }
+
+  const detoxTestSource = `package ${packageName};
+
+import com.wix.detox.Detox;
+import com.wix.detox.config.DetoxConfig;
+
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.LargeTest;
+import androidx.test.rule.ActivityTestRule;
+
+@RunWith(AndroidJUnit4.class)
+@LargeTest
+public class DetoxTest {
+    @Rule
+    public ActivityTestRule<${activityName}> mActivityRule = new ActivityTestRule<>(${activityName}.class, false, false);
+
+    @Test
+    public void runDetoxTests() {
+        DetoxConfig detoxConfig = new DetoxConfig();
+        detoxConfig.idlePolicyConfig.masterTimeoutSec = 90;
+        detoxConfig.idlePolicyConfig.idleResourceTimeoutSec = 60;
+        detoxConfig.rnContextLoadTimeoutSec = (BuildConfig.DEBUG ? 180 : 60);
+
+        Detox.runTests(mActivityRule, detoxConfig);
+    }
+}
+`;
+
+  mkdirSync(dirname(detoxTestPath), { recursive: true });
+  writeFileSync(detoxTestPath, detoxTestSource, 'utf8');
+  console.log(`Created Detox Android test source at ${detoxTestPath}.`);
 }
 
 function runGradleBuild(): void {
@@ -110,12 +264,11 @@ function ensureExpectedAndroidTestApk(): void {
 }
 
 function forceDebugBundling(): void {
-  const buildGradlePath = join(androidDir, 'app', 'build.gradle');
-  if (!existsSync(buildGradlePath)) {
+  if (!existsSync(appBuildGradlePath)) {
     return;
   }
 
-  const content = readFileSync(buildGradlePath, 'utf8');
+  const content = readFileSync(appBuildGradlePath, 'utf8');
   if (content.includes('debuggableVariants = []')) {
     return;
   }
@@ -126,7 +279,7 @@ function forceDebugBundling(): void {
   );
 
   if (patched !== content) {
-    writeFileSync(buildGradlePath, patched, 'utf8');
+    writeFileSync(appBuildGradlePath, patched, 'utf8');
     console.log('Patched build.gradle: forced JS bundling in debug builds for Detox.');
   }
 }
@@ -149,6 +302,9 @@ function normalizeGradleProperties(): void {
 
 ensureAndroidProject();
 normalizeGradleProperties();
+patchProjectBuildGradle();
+patchAppBuildGradle();
+ensureDetoxTestSource();
 forceDebugBundling();
 
 runGradleBuild();
