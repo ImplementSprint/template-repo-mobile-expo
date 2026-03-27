@@ -9,8 +9,6 @@ export function HomeScreen() {
 
   return (
     <View
-      accessible
-      accessibilityLabel="home-screen"
       collapsable={false}
       nativeID="home-screen"
       testID="home-screen"

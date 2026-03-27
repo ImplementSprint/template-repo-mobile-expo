@@ -13,20 +13,33 @@ const debugApkDir = join(androidDir, 'app', 'build', 'outputs', 'apk', 'debug');
 const expectedDebugApkPath = join(debugApkDir, 'app-debug.apk');
 const androidTestApkDir = join(androidDir, 'app', 'build', 'outputs', 'apk', 'androidTest', 'debug');
 const expectedAndroidTestApkPath = join(androidTestApkDir, 'app-debug-androidTest.apk');
+const detoxPackageJsonPath = join(process.cwd(), 'node_modules', 'detox', 'package.json');
 const kotlinVersion = '2.0.21';
 // Build only the app module artifacts Detox needs.
 // Running root-level assembleAndroidTest may trigger androidTest packaging
 // on Expo library modules (for example :expo, :expo-log-box), which can fail
 // without affecting Detox app binary requirements.
 const gradleTaskArgs = [':app:assembleDebug', ':app:assembleAndroidTest', '-DtestBuildType=debug'];
-const detoxRepositorySnippet = "maven { url('$rootDir/../node_modules/detox/Detox-android') }";
+const detoxRepositorySnippet = 'maven { url("$rootDir/../node_modules/detox/Detox-android") }';
 const detoxRepositoryPattern = /\s*maven\s*\{\s*url\((['"]?)\$rootDir\/\.\.\/node_modules\/detox\/Detox-android\1\)\s*\}\s*/g;
-const detoxDependencySnippet = "androidTestImplementation('com.wix:detox:+')";
 const androidTestCoreSnippet = "androidTestImplementation('androidx.test:core:1.7.0')";
 const androidTestRunnerSnippet = "androidTestImplementation('androidx.test:runner:1.7.0')";
 const androidTestRulesSnippet = "androidTestImplementation('androidx.test:rules:1.7.0')";
 const androidTestExtJunitSnippet = "androidTestImplementation('androidx.test.ext:junit:1.3.0')";
 const appCompatDependencySnippet = "implementation 'androidx.appcompat:appcompat:1.1.0'";
+
+function resolveDetoxVersion(): string {
+  if (!existsSync(detoxPackageJsonPath)) {
+    return '20.50.1';
+  }
+
+  const content = readFileSync(detoxPackageJsonPath, 'utf8');
+  const parsed = JSON.parse(content) as { version?: string };
+  return parsed.version || '20.50.1';
+}
+
+const detoxVersion = resolveDetoxVersion();
+const detoxDependencySnippet = `androidTestImplementation('com.wix:detox:${detoxVersion}')`;
 
 function run(command: string, args: string[], cwd = process.cwd()): void {
   const result = spawnSync(command, args, {

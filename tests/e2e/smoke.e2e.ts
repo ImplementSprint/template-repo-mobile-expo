@@ -8,18 +8,10 @@ describe('Boilerplate app smoke flow', () => {
       await device.disableSynchronization();
     }
 
-    const homeScreen = device.getPlatform() === 'ios'
-      ? element(by.label('home-screen'))
-      : element(by.id('home-screen'));
-
-    await waitFor(homeScreen).toExist().withTimeout(20000);
+    await waitFor(element(by.id('home-title'))).toExist().withTimeout(20000);
   });
 
   it('shows the home screen', async () => {
-    const homeScreen = device.getPlatform() === 'ios'
-      ? element(by.label('home-screen'))
-      : element(by.id('home-screen'));
-
-    await expect(homeScreen).toBeVisible();
+    await expect(element(by.id('home-title'))).toBeVisible();
   });
 });
