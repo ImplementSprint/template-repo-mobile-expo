@@ -21,6 +21,9 @@ const kotlinVersion = '2.0.21';
 const gradleTaskArgs = [':app:assembleDebug', ':app:assembleAndroidTest', '-DtestBuildType=debug'];
 const detoxRepositorySnippet = 'maven { url("$rootDir/../node_modules/detox/Detox-android") }';
 const detoxDependencySnippet = "androidTestImplementation('com.wix:detox:+')";
+const androidTestCoreSnippet = "androidTestImplementation('androidx.test:core:1.7.0')";
+const androidTestRunnerSnippet = "androidTestImplementation('androidx.test:runner:1.7.0')";
+const androidTestRulesSnippet = "androidTestImplementation('androidx.test:rules:1.7.0')";
 const appCompatDependencySnippet = "implementation 'androidx.appcompat:appcompat:1.1.0'";
 
 function run(command: string, args: string[], cwd = process.cwd()): void {
@@ -115,6 +118,18 @@ function patchAppBuildGradle(): void {
 
   if (!patched.includes(detoxDependencySnippet)) {
     patched = patched.replace(/dependencies\s*\{/, `dependencies {\n    ${detoxDependencySnippet}`);
+  }
+
+  if (!patched.includes(androidTestCoreSnippet)) {
+    patched = patched.replace(/dependencies\s*\{/, `dependencies {\n    ${androidTestCoreSnippet}`);
+  }
+
+  if (!patched.includes(androidTestRunnerSnippet)) {
+    patched = patched.replace(/dependencies\s*\{/, `dependencies {\n    ${androidTestRunnerSnippet}`);
+  }
+
+  if (!patched.includes(androidTestRulesSnippet)) {
+    patched = patched.replace(/dependencies\s*\{/, `dependencies {\n    ${androidTestRulesSnippet}`);
   }
 
   if (!patched.includes(appCompatDependencySnippet)) {

@@ -5,7 +5,7 @@ const config: Config = {
   testMatch: ['<rootDir>/tests/unit/**/*.test.ts?(x)'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   moduleNameMapper: {
-    '^@app/(.*)$': '<rootDir>/src/app/$1',
+    '^@app/(.*)$': '<rootDir>/src/bootstrap/$1',
     '^@config/(.*)$': '<rootDir>/src/config/$1',
     '^@features/(.*)$': '<rootDir>/src/features/$1',
     '^@navigation/(.*)$': '<rootDir>/src/navigation/$1',
