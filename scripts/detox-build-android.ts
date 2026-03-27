@@ -9,6 +9,8 @@ const gradlePropertiesPath = join(androidDir, 'gradle.properties');
 const gradleWrapperPath = join(androidDir, gradleWrapper);
 const debugApkDir = join(androidDir, 'app', 'build', 'outputs', 'apk', 'debug');
 const expectedDebugApkPath = join(debugApkDir, 'app-debug.apk');
+const androidTestApkDir = join(androidDir, 'app', 'build', 'outputs', 'apk', 'androidTest', 'debug');
+const expectedAndroidTestApkPath = join(androidTestApkDir, 'app-debug-androidTest.apk');
 const kotlinVersion = '2.0.21';
 // Build only the app module artifacts Detox needs.
 // Running root-level assembleAndroidTest may trigger androidTest packaging
@@ -79,6 +81,34 @@ function ensureExpectedDebugApk(): void {
   console.log(`Normalized debug APK for Detox: ${firstCandidate} -> app-debug.apk`);
 }
 
+function ensureExpectedAndroidTestApk(): void {
+  if (existsSync(expectedAndroidTestApkPath)) {
+    return;
+  }
+
+  if (!existsSync(androidTestApkDir)) {
+    console.error(`Missing Android test APK output directory: ${androidTestApkDir}`);
+    process.exit(1);
+  }
+
+  const androidTestApkCandidates = readdirSync(androidTestApkDir)
+    .filter((fileName) => fileName.endsWith('.apk'))
+    .sort((left, right) => left.localeCompare(right));
+
+  const [firstCandidate] = androidTestApkCandidates;
+
+  if (!firstCandidate) {
+    console.error(`No Android test APK found under: ${androidTestApkDir}`);
+    process.exit(1);
+  }
+
+  const candidatePath = join(androidTestApkDir, firstCandidate);
+
+  mkdirSync(androidTestApkDir, { recursive: true });
+  copyFileSync(candidatePath, expectedAndroidTestApkPath);
+  console.log(`Normalized Android test APK for Detox: ${firstCandidate} -> app-debug-androidTest.apk`);
+}
+
 function forceDebugBundling(): void {
   const buildGradlePath = join(androidDir, 'app', 'build.gradle');
   if (!existsSync(buildGradlePath)) {
@@ -123,3 +153,4 @@ forceDebugBundling();
 
 runGradleBuild();
 ensureExpectedDebugApk();
+ensureExpectedAndroidTestApk();
