@@ -79,6 +79,28 @@ function ensureExpectedDebugApk(): void {
   console.log(`Normalized debug APK for Detox: ${firstCandidate} -> app-debug.apk`);
 }
 
+function forceDebugBundling(): void {
+  const buildGradlePath = join(androidDir, 'app', 'build.gradle');
+  if (!existsSync(buildGradlePath)) {
+    return;
+  }
+
+  const content = readFileSync(buildGradlePath, 'utf8');
+  if (content.includes('debuggableVariants = []')) {
+    return;
+  }
+
+  const patched = content.replace(
+    /react\s*\{/,
+    'react {\n    // Force JS bundling in debug builds — no Metro server available in CI/Detox\n    debuggableVariants = []',
+  );
+
+  if (patched !== content) {
+    writeFileSync(buildGradlePath, patched, 'utf8');
+    console.log('Patched build.gradle: forced JS bundling in debug builds for Detox.');
+  }
+}
+
 function normalizeGradleProperties(): void {
   if (!existsSync(gradlePropertiesPath)) {
     return;
@@ -97,6 +119,7 @@ function normalizeGradleProperties(): void {
 
 ensureAndroidProject();
 normalizeGradleProperties();
+forceDebugBundling();
 
 runGradleBuild();
 ensureExpectedDebugApk();
