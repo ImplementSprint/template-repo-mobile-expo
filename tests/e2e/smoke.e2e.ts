@@ -2,21 +2,18 @@ import { by, device, element, expect, waitFor } from 'detox';
 
 describe('Boilerplate app smoke flow', () => {
   beforeAll(async () => {
+    await device.launchApp({ newInstance: true });
+    await device.disableSynchronization();
+
     if (device.getPlatform() === 'android') {
       // On GitHub-hosted Linux runners, the Android emulator runs without KVM
       // hardware acceleration. This causes ANR dialogs during startup that steal
-      // window focus even after the ANR resolves. We disable synchronization to
-      // avoid Espresso blocking on the frozen main thread, then send to home and
-      // relaunch (without a new instance) to clear the stale dialog and restore
-      // window focus so Espresso matchers can work correctly.
-      await device.launchApp({ newInstance: true });
-      await device.disableSynchronization();
+      // window focus. We send to home to dismiss them, relaunch to restore focus,
+      // then wait 3 s for the Android OS to complete the activity focus transfer
+      // before Espresso attempts any view hierarchy queries.
       await device.sendToHome();
       await device.launchApp({ newInstance: false });
-    } else {
-      // iOS: keep Detox synchronization enabled so it naturally waits for the
-      // React Native bridge and render cycle to settle before we look for elements.
-      await device.launchApp({ newInstance: true });
+      await new Promise<void>((resolve) => { setTimeout(resolve, 3000); });
     }
 
     await waitFor(element(by.id('home-title'))).toExist().withTimeout(60000);
