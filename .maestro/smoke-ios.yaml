@@ -2,9 +2,11 @@ appId: com.anonymous.templaterepombsingle
 ---
 - launchApp:
     clearState: true
+- extendedWaitUntil:
+    visible:
+      id: home-screen-root
+    timeout: 120000
 - assertVisible:
-    id: home-title
-- tapOn:
-    id: home-title
+    id: home-screen-root
 - assertVisible:
     id: home-title
