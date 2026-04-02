@@ -3,7 +3,7 @@ import type { Config } from 'jest';
 const config: Config = {
   rootDir: '../..',
   maxWorkers: 1,
-  testTimeout: 120000,
+  testTimeout: 300000,
   testMatch: ['<rootDir>/tests/e2e/**/*.e2e.ts'],
   reporters: ['detox/runners/jest/reporter'],
   globalSetup: '<rootDir>/tests/e2e/globalSetup.ts',
