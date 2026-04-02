@@ -1,5 +1,7 @@
 import { by, device, element, expect, waitFor } from 'detox';
 
+const BEFORE_ALL_TIMEOUT_MS = 240000;
+
 async function waitForHomeReady(timeoutMs: number): Promise<void> {
   const probes = [
     element(by.id('home-screen-root')),
@@ -32,7 +34,7 @@ describe('Boilerplate app smoke flow', () => {
       // before Espresso attempts any view hierarchy queries.
       await device.sendToHome();
       await device.launchApp({ newInstance: true });
-      await new Promise<void>((resolve) => { setTimeout(resolve, 3000); });
+      await new Promise<void>((resolve: () => void) => { setTimeout(resolve, 3000); });
     }
 
     try {
@@ -43,7 +45,7 @@ describe('Boilerplate app smoke flow', () => {
       await device.launchApp({ newInstance: true });
       await waitForHomeReady(90000);
     }
-  });
+  }, BEFORE_ALL_TIMEOUT_MS);
 
   it('shows the home screen', async () => {
     await waitFor(element(by.id('home-screen-root'))).toBeVisible().withTimeout(30000);
