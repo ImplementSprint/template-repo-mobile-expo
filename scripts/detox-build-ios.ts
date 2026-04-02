@@ -35,6 +35,11 @@ function spawn(command: string, args: string[], options: RunOptions = {}): RunRe
     cwd: options.cwd,
     stdio: options.stdio === 'inherit' ? 'inherit' : 'pipe',
     encoding: 'utf8',
+    env: {
+      ...process.env,
+      FORCE_BUNDLING: process.env.FORCE_BUNDLING ?? '1',
+      SKIP_BUNDLING: '',
+    },
     shell: false,
   });
 

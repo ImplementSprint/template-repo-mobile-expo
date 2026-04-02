@@ -1,4 +1,4 @@
-import { by, device, element, expect } from 'detox';
+import { by, device, element, expect, waitFor } from 'detox';
 
 describe('Boilerplate app smoke flow', () => {
   beforeAll(async () => {
@@ -6,6 +6,9 @@ describe('Boilerplate app smoke flow', () => {
   });
 
   it('placeholder e2e test', async () => {
+    await waitFor(element(by.id('home-screen-root'))).toBeVisible().withTimeout(30000);
+    await waitFor(element(by.id('home-title'))).toBeVisible().withTimeout(30000);
+    await expect(element(by.id('home-screen-root'))).toBeVisible();
     await expect(element(by.id('home-title'))).toBeVisible();
   });
 });
