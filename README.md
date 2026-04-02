@@ -5,7 +5,7 @@ This repository is a reusable Expo + TypeScript boilerplate for the single-syste
 Start here:
 
 - Onboarding guide: ONBOARDING.md
-- Reusable onboarding skill: onboarding-skill/SKILL.md
+- Reusable onboarding skill: .github/onboarding-skill/SKILL.md
 
 ## Stack
 
@@ -14,7 +14,7 @@ Start here:
 - TypeScript (strict mode)
 - React Navigation (native stack)
 - Jest (`tests/unit`)
-- Detox (`tests/e2e`)
+- Maestro (`.maestro`)
 
 ## Structure
 
@@ -28,7 +28,6 @@ src/
   utils/
 tests/
   unit/
-  e2e/
 ```
 
 ## Commands
@@ -44,10 +43,10 @@ tests/
 - `npm run lint`: Lint all files
 - `npm run typecheck`: Type-check project
 - `npm run test`: Run unit tests with coverage
-- `npm run detox:build`: Build Detox Android binary
-- `npm run detox:test`: Run Detox tests
-- `npm run detox:build:ios`: Build the Detox iOS simulator app
-- `npm run detox:test:ios`: Run Detox tests on the iOS simulator
+- `npm run maestro:validate`: Ensure `.maestro` has at least one flow file
+- `npm run maestro:test`: Run all Maestro flows
+- `npm run maestro:test:android`: Run Android smoke flow
+- `npm run maestro:test:ios`: Run iOS smoke flow
 - `npm run android:prebuild`: Regenerate Android native code from Expo config
 
 ## Environment
@@ -77,16 +76,14 @@ An example file is provided at `.env.example`.
 
 - `src/**`
 - `tests/unit/**`
-- `tests/e2e/**` test cases
+- `.maestro/**` flow files
 - `app.config.ts`
 - environment value wiring via `src/config/appConfig.ts`
 
 ## What Teams Should Not Touch Without Platform Review
 
 - `.github/workflows/**`
-- `scripts/detox-build-android.ts`
-- `scripts/detox-build-ios.ts`
-- `tests/e2e/jest.config.ts`
+- `scripts/validate-maestro-flows.ts`
 
 ## CI
 
@@ -111,10 +108,9 @@ Recommended value:
 
 CI build policy:
 
-- The central mobile workflow builds Expo apps locally with `expo prebuild`, Gradle, xcodebuild, and Detox.
+- The central mobile workflow builds Expo apps locally with `expo prebuild`, Gradle, xcodebuild, and Maestro.
 - `EXPO_TOKEN`, `EXPO_PROJECT_ID`, `EXPO_OWNER`, `eas.json`, and remote EAS credentials are not required for CI.
-- The Android Detox helper normalizes `android/gradle.properties` so Expo Kotlin version settings stay deterministic in CI.
-- Detox test setup uses Detox Jest runner defaults (`reporter`, `globalSetup`, `globalTeardown`, `testEnvironment`) with TypeScript E2E setup files.
+- Stage 3 E2E expects `.maestro/` with at least one flow file.
 - The app must remain TypeScript-only with strict mode enabled.
 
 ## Dependency Update Policy
@@ -122,7 +118,7 @@ CI build policy:
 - Keep Expo compatibility first.
 - Run `npx expo install --check` before and after upgrades.
 - Use `npm update` for compatible updates.
-- Validate with `npm run verify` plus Detox build/test commands.
+- Validate with `npm run verify` plus Maestro smoke flow commands.
 
 
 this is for testing again

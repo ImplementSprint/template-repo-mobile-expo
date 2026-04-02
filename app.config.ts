@@ -41,7 +41,6 @@ export default function getExpoConfig(): ExpoConfig {
       },
     },
     plugins: [
-      './plugins/withDetoxAndroidCleartextTraffic',
       [
         'expo-build-properties',
         {

@@ -73,7 +73,7 @@ Put application code and tests in these locations:
 - `src/theme/`: theme tokens and spacing
 - `src/utils/`: shared helpers
 - `tests/unit/`: Jest unit tests (`*.test.ts`, `*.test.tsx`)
-- `tests/e2e/`: Detox E2E tests (`*.e2e.ts`)
+- `.maestro/`: Maestro E2E flow files (`*.yaml`, `*.yml`)
 
 Expo metadata belongs in `app.config.ts`.
 
@@ -96,18 +96,18 @@ These are CI/CD contract rules enforced by the Expo workflow.
 - Keep repository variable name `MOBILE_SINGLE_SYSTEMS_JSON` (or correctly configured `MOBILE_MULTI_SYSTEMS_JSON`)
 - Keep `mobile_stack` set to `expo` for this template system
 
-### Detox contracts
+### Maestro contracts
 
-- Keep `postinstall` script that runs `scripts/ensure-detox-jest-compat.ts`
-- Do not change `tests/e2e/jest.config.ts` runner wiring unless you also update CI expectations
-- Keep Detox configuration names valid in `package.json` (`android.emu.debug`, `ios.sim.debug`) unless you intentionally override them in system JSON
+- Keep `.maestro/` in the repository.
+- Keep at least one flow file (`*.yaml` or `*.yml`) under `.maestro/`.
+- Keep `scripts/validate-maestro-flows.ts` and `npm run maestro:validate` working.
 
 ## 5) Tests You Need To Create
 
 Create both categories of tests for every feature:
 
 1. Unit tests (`tests/unit`)
-2. E2E tests (`tests/e2e`)
+2. E2E tests (`.maestro`)
 
 ### Unit tests (required)
 
@@ -132,9 +132,10 @@ Then add E2E flows for your critical paths, such as:
 - Main navigation between core screens
 - Core happy path action (submit, save, checkout, etc.)
 
-Current example:
+Current examples:
 
-- `tests/e2e/smoke.e2e.ts`
+- `.maestro/smoke-android.yaml`
+- `.maestro/smoke-ios.yaml`
 
 ## 6) CI Test Gates (What Must Pass)
 
@@ -146,11 +147,11 @@ The Expo lane runs in this order:
    - Lint
    - Security scan
 2. Stage 2 builds:
-   - Android build for Detox artifacts
-   - iOS simulator build for Detox artifacts
+   - Android build for Maestro artifacts
+   - iOS simulator build for Maestro artifacts
 3. Stage 3 E2E:
-   - Detox Android E2E
-   - Detox iOS E2E
+   - Maestro Android E2E
+   - Maestro iOS E2E
 
 Important defaults from CI:
 
@@ -165,11 +166,10 @@ Run this before opening a PR:
 
 ```sh
 npm run verify
-npm run detox:build
-npm run detox:test
+npm run maestro:validate
+npm run maestro:test:android
 # macOS recommended:
-npm run detox:build:ios
-npm run detox:test:ios
+npm run maestro:test:ios
 ```
 
 If these pass locally, CI failure risk is much lower.
@@ -179,5 +179,5 @@ If these pass locally, CI failure risk is much lower.
 - `tsconfig` strict mode turned off
 - JS/JSX app source files added
 - Coverage dropped below threshold
-- Detox config names changed without CI override updates
+- `.maestro/` was deleted or contains no flow files
 - `MOBILE_SINGLE_SYSTEMS_JSON` missing or wrong `mobile_stack`

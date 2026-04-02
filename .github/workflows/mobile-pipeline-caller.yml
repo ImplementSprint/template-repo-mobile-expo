@@ -17,8 +17,8 @@
 # { "name": "MyApp-Mobile", "dir": ".", "mobile_stack": "expo" }
 #
 # Optional overrides (showing defaults):
-#   enable_android_build: true   — Local Android build (Detox debug APK)
-#   enable_ios_build: true       — Local iOS simulator build (Detox debug .app)
+#   enable_android_build: true   — Local Android app build for Maestro (debug APK)
+#   enable_ios_build: true       — Local iOS simulator app build for Maestro (.app)
 #   enable_lint: true
 #   enable_security_scan: true
 #   enable_governance: true
@@ -27,8 +27,8 @@
 # Expo systems must be TypeScript-based:
 #   tsconfig.json + strict mode
 # Builds are local (xcodebuild / Gradle) — no EAS or EXPO_TOKEN needed.
-# Detox E2E tests consume build artifacts from the build stage.
-# SonarCloud runs once at the master mobile pipeline level, and Detox
+# Maestro E2E tests consume build artifacts from the build stage.
+# SonarCloud runs once at the master mobile pipeline level, and Maestro
 # runs by default for Expo systems.
 # ──────────────────────────────────────────────────────────────
 name: "Master Pipeline — Mobile"
@@ -102,7 +102,7 @@ permissions:
 
 jobs:
   call-orchestrator:
-    uses: ImplementSprint/central-workflow/.github/workflows/master-pipeline-mobile.yml@main
+    uses: ImplementSprint/central-workflow/.github/workflows/master-pipeline-mobile.yml@maestro
     with:
       pipeline_mode: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.pipeline_mode || 'auto' }}
       enable_lint: ${{ github.event_name == 'workflow_dispatch' && fromJSON(github.event.inputs.enable_lint || 'true') || true }}

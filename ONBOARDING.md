@@ -2,7 +2,7 @@
 
 This guide is for teams adopting this Expo TypeScript boilerplate.
 
-Use the onboarding skill at onboarding-skill/SKILL.md as the operating checklist.
+Use the onboarding skill at .github/onboarding-skill/SKILL.md as the operating checklist.
 
 ## 1) What onboarding includes
 
@@ -46,7 +46,7 @@ Use the onboarding skill at onboarding-skill/SKILL.md as the operating checklist
 
 - src/**
 - tests/unit/**
-- tests/e2e/** (test cases only)
+- .maestro/** (flow files)
 - app.config.ts
 - .env value usage through src/config/appConfig.ts
 - theme and navigation files under src/**
@@ -54,9 +54,7 @@ Use the onboarding skill at onboarding-skill/SKILL.md as the operating checklist
 ## 5) What you should not touch (without platform review)
 
 - .github/workflows/**
-- scripts/detox-build-android.ts
-- scripts/detox-build-ios.ts
-- tests/e2e/jest.config.ts
+- scripts/validate-maestro-flows.ts
 - pipeline wiring and artifact naming conventions
 
 If one of these must change, run a full CI validation branch before merge.
@@ -67,13 +65,13 @@ If one of these must change, run a full CI validation branch before merge.
   - Location: tests/unit/**
   - Command: npm run test:unit
 
-- Detox E2E tests
-  - Location: tests/e2e/**
-  - Config: tests/e2e/jest.config.ts
-  - Global setup: tests/e2e/globalSetup.ts
+- Maestro E2E tests
+  - Location: .maestro/**
+  - Baseline flows: .maestro/smoke-android.yaml and .maestro/smoke-ios.yaml
   - Commands:
-    - Android: npm run detox:build and npm run detox:test
-    - iOS: npm run detox:build:ios and npm run detox:test:ios
+    - Validate flows: npm run maestro:validate
+    - Android: npm run maestro:test:android
+    - iOS: npm run maestro:test:ios
 
 ## 7) CI artifacts and releases
 
@@ -94,7 +92,7 @@ If one of these must change, run a full CI validation branch before merge.
   1. npm update
   2. npx expo install --check
   3. npm run verify
-  4. run Detox build/test commands
+  4. run Maestro smoke flow commands
 
 Do not blindly upgrade to latest major versions when Expo-managed ranges are not ready.
 
@@ -102,7 +100,7 @@ Do not blindly upgrade to latest major versions when Expo-managed ranges are not
 
 - verify command passes
 - unit tests pass
-- Detox Android build + test pass
-- Detox iOS build + test pass
+- Maestro Android smoke flow passes
+- Maestro iOS smoke flow passes
 - CI uploads Android and iOS artifacts
 - app identity and env values are configured

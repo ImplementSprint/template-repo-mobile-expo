@@ -1,0 +1,12 @@
+appId: com.anonymous.templaterepombsingle
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: home-screen-root
+- assertVisible:
+    id: home-title
+- tapOn:
+    id: home-title
+- assertVisible:
+    id: home-title
