@@ -12,7 +12,6 @@ export function HomeScreen() {
       collapsable={false}
       nativeID="home-screen"
       testID="home-screen-root"
-      collapsable={false}
       style={styles.root}
     >
       <Text testID="home-title" accessible={true} style={styles.title}>{appName}</Text>
