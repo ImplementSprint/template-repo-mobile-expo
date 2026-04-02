@@ -1,5 +1,5 @@
 import { copyFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import detoxGlobalSetup from 'detox/runners/jest/globalSetup.js';
 
 function collectApkCandidates() {
@@ -57,7 +57,41 @@ function ensureExpectedDebugApk() {
   console.log(`[detox-apk] Normalized APK for Detox: ${source} -> ${expectedPath}`);
 }
 
+function ensureExpectedAndroidTestApk() {
+  const expectedPath = join(
+    process.cwd(),
+    'android',
+    'app',
+    'build',
+    'outputs',
+    'apk',
+    'androidTest',
+    'debug',
+    'app-debug-androidTest.apk',
+  );
+
+  if (existsSync(expectedPath)) {
+    return;
+  }
+
+  const candidates = collectApkCandidates().filter((candidate) => candidate.includes(join('androidTest', 'debug')));
+  if (candidates.length === 0) {
+    return;
+  }
+
+  const preferred = candidates.find((candidate) => candidate.endsWith('app-debug-androidTest.apk'));
+  const source = preferred || candidates[0];
+  if (!source) {
+    return;
+  }
+
+  mkdirSync(dirname(expectedPath), { recursive: true });
+  copyFileSync(source, expectedPath);
+  console.log(`[detox-apk] Normalized Android test APK for Detox: ${source} -> ${expectedPath}`);
+}
+
 export default async function globalSetup() {
   ensureExpectedDebugApk();
+  ensureExpectedAndroidTestApk();
   await detoxGlobalSetup();
 }
