@@ -61,6 +61,14 @@ on:
         description: "Run governance checks (Kotlin)"
         type: boolean
         default: true
+      enable_maestro:
+        description: "Run Maestro Android E2E (temporary toggle for release verification)"
+        type: boolean
+        default: false
+      enable_maestro_ios:
+        description: "Run Maestro iOS E2E (temporary toggle for release verification)"
+        type: boolean
+        default: false
       enable_grafana_k6:
         description: "Run Grafana k6 cloud checks"
         type: boolean
@@ -109,6 +117,8 @@ jobs:
       enable_security_scan: ${{ github.event_name == 'workflow_dispatch' && fromJSON(github.event.inputs.enable_security_scan || 'true') || true }}
       enable_sonar: ${{ github.event_name == 'workflow_dispatch' && fromJSON(github.event.inputs.enable_sonar || 'true') || true }}
       enable_governance: ${{ github.event_name == 'workflow_dispatch' && fromJSON(github.event.inputs.enable_governance || 'true') || true }}
+      enable_maestro: ${{ github.event_name == 'workflow_dispatch' && fromJSON(github.event.inputs.enable_maestro || 'false') || false }}
+      enable_maestro_ios: ${{ github.event_name == 'workflow_dispatch' && fromJSON(github.event.inputs.enable_maestro_ios || 'false') || false }}
       enable_grafana_k6: ${{ github.event_name == 'workflow_dispatch' && fromJSON(github.event.inputs.enable_grafana_k6 || 'false') || false }}
       k6_script_path: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.k6_script_path || 'tests/performance' }}
       k6_base_url: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.k6_base_url || '' }}
