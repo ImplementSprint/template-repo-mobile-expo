@@ -6,9 +6,7 @@ tags:
     clearState: true
 - extendedWaitUntil:
     visible:
-      id: home-screen-root
+      id: home-title
     timeout: 120000
-- assertVisible:
-    id: home-screen-root
 - assertVisible:
     id: home-title
