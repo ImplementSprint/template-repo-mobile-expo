@@ -34,7 +34,7 @@ jest.mock('expo/config-plugins', () => ({
 
 function loadExpoConfig() {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const configModule = require('../../../app.config') as {
+  const configModule = require('../../app.config') as {
     default: () => { name?: string; extra?: unknown };
   };
 
