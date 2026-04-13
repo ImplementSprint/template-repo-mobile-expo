@@ -6,7 +6,9 @@ tags:
     clearState: true
 - extendedWaitUntil:
     visible:
-            text: "Single-root Expo boilerplate (TypeScript-first)"
+      id: "home-screen-root"
     timeout: 120000
 - assertVisible:
-        text: "Single-root Expo boilerplate (TypeScript-first)"
+    id: "home-screen-root"
+- assertVisible:
+    text: "Environment:"
