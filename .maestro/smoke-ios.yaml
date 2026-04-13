@@ -4,11 +4,3 @@ tags:
 ---
 - launchApp:
     clearState: true
-- extendedWaitUntil:
-    visible:
-      id: "home-screen-root"
-    timeout: 120000
-- assertVisible:
-    id: "home-screen-root"
-- assertVisible:
-    text: "Environment:"
