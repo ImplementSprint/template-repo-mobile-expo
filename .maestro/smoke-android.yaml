@@ -6,7 +6,7 @@ tags:
     clearState: true
 - extendedWaitUntil:
     visible:
-      text: "Single-root Expo boilerplate (TypeScript-first)"
+            text: "MAESTRO_SMOKE_READY"
     timeout: 120000
 - assertVisible:
-    text: "Single-root Expo boilerplate (TypeScript-first)"
+        text: "MAESTRO_SMOKE_READY"
