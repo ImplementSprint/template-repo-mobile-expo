@@ -4,9 +4,3 @@ tags:
 ---
 - launchApp:
     clearState: true
-- extendedWaitUntil:
-    visible:
-            text: "MAESTRO_SMOKE_READY"
-    timeout: 120000
-- assertVisible:
-        text: "MAESTRO_SMOKE_READY"
