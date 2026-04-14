@@ -4,4 +4,4 @@ tags:
 ---
 - launchApp:
     clearState: true
-- assertVisible: "Single-root Expo boilerplate (TypeScript-first)"
+- assertVisible: "Template Repo Mobile Single"
