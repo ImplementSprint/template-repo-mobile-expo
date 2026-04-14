@@ -1,3 +1,4 @@
+# CI validation marker: exercise Android Maestro lane after central workflow update.
 appId: com.anonymous.templaterepombsingle
 tags:
     - android
