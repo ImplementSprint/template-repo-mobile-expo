@@ -19,6 +19,14 @@ export function HomeScreen() {
       <View style={styles.badge}>
         <Text style={styles.badgeText}>Environment: {environment}</Text>
       </View>
+      <Text
+        testID="maestro-smoke-ready"
+        accessibilityLabel="maestro-smoke-ready"
+        accessible={true}
+        style={styles.smokeMarker}
+      >
+        MAESTRO_SMOKE_READY
+      </Text>
     </View>
   );
 }
@@ -55,5 +63,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.text,
     fontWeight: '500',
+  },
+  smokeMarker: {
+    fontSize: 12,
+    color: colors.muted,
+    textAlign: 'center',
   },
 });

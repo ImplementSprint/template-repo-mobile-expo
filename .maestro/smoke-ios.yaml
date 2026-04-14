@@ -4,9 +4,4 @@ tags:
 ---
 - launchApp:
     clearState: true
-- extendedWaitUntil:
-    visible:
-            text: "Single-root Expo boilerplate (TypeScript-first)"
-    timeout: 120000
-- assertVisible:
-        text: "Single-root Expo boilerplate (TypeScript-first)"
+- assertVisible: "Template Repo Mobile Single"
