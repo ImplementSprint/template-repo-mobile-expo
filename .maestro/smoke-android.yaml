@@ -4,7 +4,4 @@ tags:
 ---
 - launchApp:
     clearState: true
-- assertVisible:
-    id: "home-screen-root"
-- assertVisible:
-    id: "home-title"
+- assertVisible: "Single-root Expo boilerplate (TypeScript-first)"
