@@ -116,7 +116,7 @@ permissions:
 
 jobs:
   call-orchestrator:
-    uses: ImplementSprint/central-workflow/.github/workflows/master-pipeline-mobile.yml@maestro
+    uses: ImplementSprint/central-workflow/.github/workflows/master-pipeline-mobile.yml@main
     with:
       pipeline_mode: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.pipeline_mode || 'auto' }}
       stack_filter: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.stack_filter || 'all' }}
@@ -126,7 +126,7 @@ jobs:
       enable_governance: ${{ github.event_name == 'workflow_dispatch' && fromJSON(github.event.inputs.enable_governance || 'true') || true }}
       enable_maestro: ${{ github.event_name == 'workflow_dispatch' && fromJSON(github.event.inputs.enable_maestro || 'true') || true }}
       enable_maestro_ios: ${{ github.event_name == 'workflow_dispatch' && fromJSON(github.event.inputs.enable_maestro_ios || 'true') || true }}
-      enable_grafana_k6: ${{ github.event_name == 'workflow_dispatch' && fromJSON(github.event.inputs.enable_grafana_k6 || 'false') || false }}
+      enable_grafana_k6: ${{ github.event_name == 'workflow_dispatch' && fromJSON(github.event.inputs.enable_grafana_k6 || 'true') || true }}
       k6_script_path: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.k6_script_path || 'tests/performance' }}
       k6_base_url: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.k6_base_url || '' }}
       k6_run_only_on_branch: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.k6_run_only_on_branch || 'test,uat,main' }}
